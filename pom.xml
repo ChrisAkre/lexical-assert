@@ -113,7 +113,7 @@
                             <file>${project.basedir}/README.md</file>
                             <replacements>
                                 <replacement>
-                                    <token><![CDATA[(<!--current_version-->).*?(<!--current_version-->)]]></token>
+                                    <token><![CDATA[(<artifactId>lexical-assert</artifactId>\s*<version>).*?(</version>)]]></token>
                                     <value><![CDATA[$1${project.version}$2]]></value>
                                 </replacement>
                             </replacements>
