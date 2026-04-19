@@ -1,0 +1,1 @@
+WITH user_data AS (SELECT u.id, u.first_name, u.last_name, p.profile_pic FROM user_accounts u JOIN profiles p ON u.id = p.user_id) SELECT * FROM user_data

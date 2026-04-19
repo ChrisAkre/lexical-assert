@@ -1,0 +1,1 @@
+with user_data as (select u.id, u.first_name, u.last_name, p.avatar_url from users u join profiles p on u.id = p.user_id) select * from user_data
