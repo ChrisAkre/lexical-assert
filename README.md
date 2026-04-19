@@ -18,7 +18,7 @@ Add the dependency to your `pom.xml` (usually in the `test` scope):
 <dependency>
     <groupId>dev.akre.test</groupId>
     <artifactId>lexical-assert</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <scope>test</scope>
 </dependency>
 ```

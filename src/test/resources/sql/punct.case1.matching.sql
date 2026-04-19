@@ -1,0 +1,1 @@
+select a . * from a join b on a . b_id = b . id

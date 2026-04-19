@@ -1,0 +1,1 @@
+SELECT FIRSTNAME, lastname FROM userprofiles

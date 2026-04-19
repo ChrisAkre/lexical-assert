@@ -1,0 +1,1 @@
+select 'O''Reilly' as NAME

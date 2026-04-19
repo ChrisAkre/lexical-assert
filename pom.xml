@@ -91,6 +91,36 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>3.0.1</version> <configuration>
+                        <preparationGoals>clean compile replacer:replace scm:checkin -Dmessage="docs: Update README version" -Dincludes=README.md</preparationGoals>
+                    </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.google.code.maven-replacer-plugin</groupId>
+                        <artifactId>replacer</artifactId>
+                        <version>1.5.3</version>
+                        <executions>
+                            <execution>
+                                <id>update-readme-version</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>replace</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <file>${project.basedir}/README.md</file>
+                            <replacements>
+                                <replacement>
+                                    <token><![CDATA[(<artifactId>lexical-assert</artifactId>\s*<version>).*?(</version>)]]></token>
+                                    <value><![CDATA[$1${project.version}$2]]></value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
                         <version>3.3.1</version>
                         <executions>
