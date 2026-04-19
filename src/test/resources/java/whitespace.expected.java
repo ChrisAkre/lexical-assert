@@ -1,0 +1,6 @@
+public class WhitespaceTest {
+    public int calc(int x, int y) {
+        int z = (x + y) * 2;
+        return z;
+    }
+}
