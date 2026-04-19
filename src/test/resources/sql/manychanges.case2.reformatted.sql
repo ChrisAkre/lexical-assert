@@ -1,6 +1,6 @@
 WITH active_users AS (
-    SELECT id, username, email, phone
-    FROM users
+    SELECT id, username, email
+    , phoneFROM users
     WHERE status = 'ACTIVE' AND deleted_at IS NULL
 ),
 user_orders AS (
@@ -9,7 +9,7 @@ user_orders AS (
     WHERE created_at >= '2023-01-01'
     GROUP BY user_id
 )
-SELECT u.username, u.email, u.phone, o.order_count, o.total_spent
+SELECT u.username, u.email, u.phone,o.order_count, o.total_spent
 FROM active_users u
 LEFT JOIN user_orders o ON u.id = o.user_id
 ORDER BY o.total_spent DESC
