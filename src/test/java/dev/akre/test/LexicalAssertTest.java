@@ -8,6 +8,13 @@ import org.opentest4j.AssertionFailedError;
 public class LexicalAssertTest {
 
     @Test
+    public void testDecimal() {
+        assertThrows(AssertionFailedError.class,
+                () -> LexicalAssert.assertStructuralEquals(Tokenizer.JAVA_CODE, "2.5", "2 . 5"));
+
+    }
+
+    @Test
     public void testSuccessfulComparison() {
         String expected = "public   class  Foo  { }";
         String actual = "public class Foo {}";

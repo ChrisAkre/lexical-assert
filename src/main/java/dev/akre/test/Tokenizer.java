@@ -119,9 +119,11 @@ public interface Tokenizer {
             "|                     # OR\n" +
             "'(?:\\\\\\\\'|[^'])*'     # 2. Characters (Single quotes, allowing escaped \\\')\n" +
             "|                     # OR\n" +
-            "[a-zA-Z0-9_$]+        # 3. Words (Identifiers, Numbers, Keywords)\n" +
+            "[0-9]+\\.[0-9]+       # 3. Decimal Numbers\n" +
             "|                     # OR\n" +
-            "[^a-zA-Z0-9_$\\s]     # 4. Symbols (Everything else except whitespace)")
+            "[a-zA-Z0-9_$]+        # 4. Words (Identifiers, Numbers, Keywords)\n" +
+            "|                     # OR\n" +
+            "[^a-zA-Z0-9_$\\s]     # 5. Symbols (Everything else except whitespace)")
     );
 
     /**
