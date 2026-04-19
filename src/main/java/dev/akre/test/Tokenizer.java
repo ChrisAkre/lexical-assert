@@ -149,4 +149,31 @@ public interface Tokenizer {
             "|                     # OR\n" +
             "[^a-zA-Z0-9_\\s]       # 4. Symbols (Operators, Punctuation)")
     );
+
+    /**
+     * A tokenizer for ANSI SQL that ignores comments.
+     */
+    Tokenizer SQL_IGNORING_COMMENTS = s -> {
+        List<Token> tokens = new ArrayList<>();
+        Matcher m = Pattern.compile("(?x)\n" +
+                "--[^\\n]*              # Single-line comment\n" +
+                "|                     # OR\n" +
+                "/\\*[\\s\\S]*?\\*/        # Multi-line comment\n" +
+                "|                     # OR\n" +
+                "'(?:''|[^'])*'        # 1. Strings (Single quotes, escaped via '')\n" +
+                "|                     # OR\n" +
+                "\"(?:\"\"|[^\"])*\"     # 2. Quoted Identifiers (Double quotes)\n" +
+                "|                     # OR\n" +
+                "[a-zA-Z0-9_]+         # 3. Words (Identifiers, Numbers, Keywords)\n" +
+                "|                     # OR\n" +
+                "[^a-zA-Z0-9_\\s]       # 4. Symbols (Operators, Punctuation)").matcher(s);
+        while (m.find()) {
+            String group = m.group();
+            if (group.startsWith("--") || group.startsWith("/*")) {
+                continue;
+            }
+            tokens.add(new UnquotedCaseInsensitiveToken(group, m.start(), m.end()));
+        }
+        return tokens;
+    };
 }
