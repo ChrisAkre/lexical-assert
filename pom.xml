@@ -162,5 +162,10 @@
             <id>ossrh</id>
             <url>https://central.sonatype.com/service/local/staging/deploy/maven2/</url>
         </repository>
+        <snapshotRepository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/ChrisAkre/test-fixtures-maven-plugin</url>
+        </snapshotRepository>
     </distributionManagement>
 </project>
