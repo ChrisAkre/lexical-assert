@@ -18,7 +18,7 @@ public class LexicalAssertHarnessTest {
 
     @TestFactory
     public Stream<DynamicNode> lexicalAssertTests() throws IOException {
-        return Stream.of("java", "json", "sql")
+        return Stream.of("java", "json", "sql", "sql_with_comments")
                 .map(RESOURCES::resolve)
                 .filter(Files::exists)
                 .flatMap(this::processLanguageDir);
@@ -89,6 +89,7 @@ public class LexicalAssertHarnessTest {
             case "java": return Tokenizer.JAVA_CODE;
             case "json": return Tokenizer.JSON;
             case "sql": return Tokenizer.SQL;
+            case "sql_with_comments": return Tokenizer.SQL_IGNORING_COMMENTS;
             default: throw new IllegalArgumentException("Unknown language: " + lang);
         }
     }
