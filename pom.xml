@@ -185,7 +185,8 @@
         <connection>scm:git:https://github.com/ChrisAkre/lexical-assert.git</connection>
         <developerConnection>scm:git:https://github.com/ChrisAkre/lexical-assert.git</developerConnection>
         <url>https://github.com/ChrisAkre/lexical-assert</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <distributionManagement>
         <repository>
