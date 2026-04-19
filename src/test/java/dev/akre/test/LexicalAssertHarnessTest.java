@@ -7,6 +7,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
+
+import com.amihaiemil.eoyaml.Yaml;
+import com.amihaiemil.eoyaml.YamlMapping;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.DynamicTest;
@@ -15,6 +21,46 @@ import org.junit.jupiter.api.TestFactory;
 public class LexicalAssertHarnessTest {
 
     private static final Path RESOURCES = Paths.get("src/test/resources");
+
+
+    private static class ParsedFile {
+        final String name;
+        final String description;
+        final String content;
+
+        ParsedFile(String name, String description, String content) {
+            this.name = name;
+            this.description = description;
+            this.content = content;
+        }
+    }
+
+    private static final Pattern FRONTMATTER_PATTERN = Pattern.compile("^---\\r?\\n(.*?)\\r?\\n---\\r?\\n(.*)$", Pattern.DOTALL);
+
+    private ParsedFile parseFile(Path path, String defaultName, boolean isExpected) throws IOException {
+        String rawContent = new String(Files.readAllBytes(path));
+        Matcher matcher = FRONTMATTER_PATTERN.matcher(rawContent);
+
+        String name = defaultName;
+        String description = null;
+        String content = rawContent;
+
+        if (matcher.find()) {
+            String yamlStr = matcher.group(1);
+            content = matcher.group(2);
+            YamlMapping yaml = Yaml.createYamlInput(yamlStr).readYamlMapping();
+
+            String nameKey = isExpected ? "test-name" : "case-name";
+            if (yaml.string(nameKey) != null) {
+                name = yaml.string(nameKey);
+            }
+            if (yaml.string("description") != null) {
+                description = yaml.string("description");
+            }
+        }
+        return new ParsedFile(name, description, content);
+    }
+
 
     @TestFactory
     public Stream<DynamicNode> lexicalAssertTests() throws IOException {
@@ -37,47 +83,63 @@ public class LexicalAssertHarnessTest {
 
     private DynamicNode processExpectedFile(final Tokenizer tokenizer, final Path expectedPath) {
         String fileName = expectedPath.getFileName().toString();
-        final String testName = fileName.substring(0, fileName.indexOf(".expected."));
+        final String fileTestName = fileName.substring(0, fileName.indexOf(".expected."));
         final String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
         
         try {
-            final String expectedContent = new String(Files.readAllBytes(expectedPath));
+            ParsedFile parsedExpected = parseFile(expectedPath, fileTestName, true);
+            final String testName = parsedExpected.name;
+            final String expectedContent = parsedExpected.content;
             
             Stream<DynamicTest> failingTests = Files.list(expectedPath.getParent())
-                    .filter(p -> p.getFileName().toString().startsWith(testName + ".") && p.getFileName().toString().endsWith(".failing." + extension))
+                    .filter(p -> p.getFileName().toString().startsWith(fileTestName + ".") && p.getFileName().toString().endsWith(".failing." + extension))
                     .map(failingPath -> {
                         String fName = failingPath.getFileName().toString();
-                        final String caseName = fName.substring(testName.length() + 1, fName.indexOf(".failing."));
-                        final Path reformattedPath = failingPath.getParent().resolve(testName + "." + caseName + ".reformatted." + extension);
+                        final String defaultCaseName = fName.substring(fileTestName.length() + 1, fName.indexOf(".failing."));
+                        final Path reformattedPath = failingPath.getParent().resolve(fileTestName + "." + defaultCaseName + ".reformatted." + extension);
                         
-                        return DynamicTest.dynamicTest(testName + " [fail: " + caseName + "]", () -> {
-                            String actualContent = new String(Files.readAllBytes(failingPath));
+                        ParsedFile parsedFailing;
+                        try {
+                            parsedFailing = parseFile(failingPath, defaultCaseName, false);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        return DynamicTest.dynamicTest(testName + " [fail: " + parsedFailing.name + "]", failingPath.toUri(), () -> {
+                            String actualContent = parsedFailing.content;
                             String expectedReformatted = new String(Files.readAllBytes(reformattedPath));
                             
                             String actualReformatted = LexicalAssert.reformatActual(tokenizer, expectedContent, actualContent);
-                            assertEquals(expectedReformatted, actualReformatted, "Reformatted output mismatch for case: " + caseName);
+                            assertEquals(expectedReformatted, actualReformatted, "Reformatted output mismatch for case: " + parsedFailing.name);
                         });
                     });
 
             Stream<DynamicTest> matchingTests = Files.list(expectedPath.getParent())
-                    .filter(p -> p.getFileName().toString().startsWith(testName + ".") && p.getFileName().toString().endsWith(".matching." + extension))
+                    .filter(p -> p.getFileName().toString().startsWith(fileTestName + ".") && p.getFileName().toString().endsWith(".matching." + extension))
                     .map(matchingPath -> {
                         String mName = matchingPath.getFileName().toString();
-                        final String caseName = mName.substring(testName.length() + 1, mName.indexOf(".matching."));
+                        final String defaultCaseName = mName.substring(fileTestName.length() + 1, mName.indexOf(".matching."));
+
+                        ParsedFile parsedMatching;
+                        try {
+                            parsedMatching = parseFile(matchingPath, defaultCaseName, false);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                         
-                        return DynamicTest.dynamicTest(testName + " [match: " + caseName + "]", () -> {
-                            String actualContent = new String(Files.readAllBytes(matchingPath));
+                        return DynamicTest.dynamicTest(testName + " [match: " + parsedMatching.name + "]", matchingPath.toUri(), () -> {
+                            String actualContent = parsedMatching.content;
                             // This should not throw an exception
                             LexicalAssert.assertStructuralEquals(tokenizer, expectedContent, actualContent);
                         });
                     });
 
-            DynamicTest successTest = DynamicTest.dynamicTest(testName + " [self-match]", () -> {
+            DynamicTest successTest = DynamicTest.dynamicTest(testName + " [self-match]", expectedPath.toUri(), () -> {
                 String actualReformatted = LexicalAssert.reformatActual(tokenizer, expectedContent, expectedContent);
                 assertEquals(expectedContent, actualReformatted, "Self-match should return original expected content");
             });
 
-            return DynamicContainer.dynamicContainer(testName, Stream.concat(Stream.of(successTest), Stream.concat(failingTests, matchingTests)));
+            return DynamicContainer.dynamicContainer(testName, expectedPath.toUri(), Stream.concat(Stream.of(successTest), Stream.concat(failingTests, matchingTests)));
 
         } catch (IOException e) {
             throw new RuntimeException(e);
