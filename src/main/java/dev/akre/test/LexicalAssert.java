@@ -64,26 +64,46 @@ public class LexicalAssert {
 
             int sourceStartOffset;
             int sourceEndOffset;
+            String replacement = "";
 
             if (source.getLines().isEmpty()) {
                 // INSERT operation
-                if (source.getPosition() < expectedTokens.size()) {
-                    sourceStartOffset = expectedTokens.get(source.getPosition()).startOffset();
-                } else {
-                    sourceStartOffset = expected.length();
+                sourceStartOffset = source.getPosition() > 0
+                        ? expectedTokens.get(source.getPosition() - 1).endOffset()
+                        : 0;
+                sourceEndOffset = source.getPosition() < expectedTokens.size()
+                        ? expectedTokens.get(source.getPosition()).startOffset()
+                        : expected.length();
+
+                int targetStartOffset = target.getPosition() > 0
+                        ? actualTokens.get(target.getPosition() - 1).endOffset()
+                        : 0;
+                int nextTargetPos = target.getPosition() + target.size();
+                int targetEndOffset = nextTargetPos < actualTokens.size()
+                        ? actualTokens.get(nextTargetPos).startOffset()
+                        : actual.length();
+
+                replacement = actual.substring(targetStartOffset, targetEndOffset);
+
+                // --- THE MAGIC FIX: SMART NEWLINE PRESERVATION ---
+                String expectedGap = expected.substring(sourceStartOffset, sourceEndOffset);
+                if (expectedGap.contains("\n") && !replacement.contains("\n")) {
+                    // Actual inserted text is on a single line, but expected skeleton has a newline.
+                    // Strip trailing horizontal space from the replacement and append the expected gap (newline + any indent).
+                    replacement = replacement.replaceAll("[ \\t]+$", "") + expectedGap;
                 }
-                sourceEndOffset = sourceStartOffset;
+
             } else {
                 // DELETE or CHANGE operation
+                // Strictly use token boundaries to preserve the expected string's formatting
                 sourceStartOffset = expectedTokens.get(source.getPosition()).startOffset();
                 sourceEndOffset = expectedTokens.get(source.getPosition() + source.size() - 1).endOffset();
-            }
 
-            String replacement = "";
-            if (!target.getLines().isEmpty()) {
-                int targetStartOffset = actualTokens.get(target.getPosition()).startOffset();
-                int targetEndOffset = actualTokens.get(target.getPosition() + target.size() - 1).endOffset();
-                replacement = actual.substring(targetStartOffset, targetEndOffset);
+                if (!target.getLines().isEmpty()) {
+                    int targetStartOffset = actualTokens.get(target.getPosition()).startOffset();
+                    int targetEndOffset = actualTokens.get(target.getPosition() + target.size() - 1).endOffset();
+                    replacement = actual.substring(targetStartOffset, targetEndOffset);
+                }
             }
 
             hybrid.replace(sourceStartOffset, sourceEndOffset, replacement);
