@@ -1,0 +1,9 @@
+public class MultilineTest {
+    public void doSomething(int x, int y) {
+        if (x > y) {
+            System.out.println("x is greater");
+        } else {
+            System.out.println("y is greater or equal");
+        }
+    }
+}
