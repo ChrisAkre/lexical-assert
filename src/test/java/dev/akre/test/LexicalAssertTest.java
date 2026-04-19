@@ -43,6 +43,25 @@ public class LexicalAssertTest {
     }
 
     @Test
+    public void testInsertion() {
+        String expected = "[a c d]";
+        String actual = "[a b c d]";
+        String reformatted = LexicalAssert.reformatActual(Tokenizer.JAVA_CODE, expected, actual);
+
+        assertEquals(actual, reformatted);
+    }
+
+    @Test
+    public void testMultilineInsertion() {
+        String expected = "SELECT id, phone\nFROM users";
+        String actual = "SELECT id,phone, email FROM users";
+        String reformatted = LexicalAssert.reformatActual(Tokenizer.JAVA_CODE, expected, actual);
+
+        assertEquals("SELECT id, phone, email\nFROM users", reformatted);
+    }
+
+
+    @Test
     public void testAssertJFluentApi() {
         String actual = "select first,last from users";
         String expected = "SELECT\n" +
