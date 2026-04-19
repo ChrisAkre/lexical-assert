@@ -165,7 +165,7 @@
         <snapshotRepository>
             <id>github</id>
             <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/ChrisAkre/test-fixtures-maven-plugin</url>
+            <url>https://maven.pkg.github.com/ChrisAkre/lexical-assert</url>
         </snapshotRepository>
     </distributionManagement>
 </project>
